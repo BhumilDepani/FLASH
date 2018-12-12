@@ -1,4 +1,4 @@
-#include<reg52.h>                                     //header file
+#include<reg51.h>                                     //header file
 
 sbit en_ip1=P1^4;                                    //all four variables are used to enable inputs buffers
 sbit en_ip2=P1^3;
@@ -25,7 +25,6 @@ unsigned char call_car=0x00;                              //in call variable if 
 unsigned char call_lan=0x00;
 unsigned char call=0x00;
 unsigned char car_desti=0x00;
-//unsigned char call_lan_pre=0x00;
 
 void en_op_fun(bit op,unsigned char temp);
 unsigned char en_ip_fun(bit ip1,bit ip2);
@@ -33,9 +32,9 @@ unsigned char op2_fun();                              //three functions for diff
 
 void ms_delay(unsigned int time);                     //delay functions
 
-unsigned int fan,stand,like_stop,buzzer,car_buzzer,car_buzzer2,ram,buzzer_on_count;
-unsigned char i,temp,temp2,k,blink,memo,blink_seven,ram_count;
-bit door,start,desti_change,seco_spee,ready,fire,maintain,disp,ram_flip,cl,stand_or_not,buzzer_on;
+unsigned int fan,stand,buzzer,car_buzzer,car_buzzer2,ram,buzzer_on_count;
+unsigned char i,temp,temp2,k,blink,blink_seven,ram_count;
+bit door,start,desti_change,seco_spee,ready,stop,fire,maintain,AA,disp,ram_flip,cl,stand_or_not,buzzer_on;
 
 void main()                                           //output is accordingly negative logic
 {
@@ -54,11 +53,10 @@ void main()                                           //output is accordingly ne
 	
 	fan = 0;                               //integers
 	stand =0;
-	like_stop=0;
 	buzzer=0;
-	ram=0;
 	car_buzzer=0;
 	car_buzzer2=0;
+  ram=0;
 	buzzer_on_count=0;
 	
 	blink=0;                              //chars
@@ -69,9 +67,11 @@ void main()                                           //output is accordingly ne
 	start=0;                             //to ckeck till when we need to drive the car till it ends to one of the the floor
 	desti_change=1;                      //desination can be changed
 	seco_spee = 0;                       //car is going at secong speed
+	stop=0;
 	ready = 1;                           //car is ready to take second call                      
-	//fire = 0;
-	//maintain = 0;
+	fire = 0;
+	maintain = 0;
+	AA=0;
 	disp=0;
 	ram_flip=0;
 	cl=0;
@@ -161,7 +161,7 @@ void main()                                           //output is accordingly ne
 			ip4 = en_ip_fun(1,1);
 			temp = ip4 & 0x80;
 			temp2 = ip4 & 0x03;
-			if(car == car_desti && seco_spee ==0 && temp != 0x80 && temp2 == 0x03)
+			if(car == car_desti && seco_spee ==0 && temp != 0x80 && temp2 == 0x03 && maintain==0)
 			{
 				P2= P2 & 0xBF;                    //give second speed
 				ms_delay(1);
@@ -350,7 +350,7 @@ void main()                                           //output is accordingly ne
 		
 		ip4=en_ip_fun(1,1);                      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		if(ready == 1 && car_desti != 0x00)          //01010101010101010101010101010101010101010101010101
+		if(ready == 1 && car_desti != 0x00 && maintain==0)          //01010101010101010101010101010101010101010101010101
 		{
 			ip4 = en_ip_fun(1,1);
 			temp = ip4 & 0x01;
@@ -379,17 +379,27 @@ void main()                                           //output is accordingly ne
 			}
 			else if(temp == 0x01 && temp != 0x02)
 			{
-				P2 = P2 | 0x72;
+				P2 = P2 | 0x62;
 				ms_delay(1);
-				if(ram_flip == 0)
+				ip4=en_ip_fun(1,1);
+				temp = ip4 & 0x80;
+				if(temp == 0x80)
 				{
-				  P2 = P2 & 0xFE;
+				  if(ram_flip == 0)
+				  {
+					P2 = P2 & 0xFE;
           ms_delay(1);					
-				}
+				  }
+				  else
+				  {	
+				    P2 = P2 | 0x01; 
+				    ms_delay(1);
+				  }
+			  }
 				else
-				{	
-				  P2 = P2 | 0x01; 
-				  ms_delay(1);
+				{
+				  P2 = P2 | 0x01;
+				  ms_delay(1);	
 				}
 				if(ram_count != 5)
           ram++;
@@ -433,13 +443,28 @@ void main()                                           //output is accordingly ne
 			}
 		}
 		
+		ip4=en_ip_fun(1,1);                          //AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA
+		temp = ip4 & 0x04;
+		if(temp == 0x04)
+		{
+			if(AA==0)
+			{
+				AA=1;
+			  desti_change=0;
+			  
+			}
+			
+		}
+		else
+		{
+			AA=0;
+			desti_change=1;
+		}
 		
 		ip4 = en_ip_fun(1,1);                //fire  fire  fire  fire  fire  fie  rfire
-		temp = ip4 & 0x08;
-		if(temp == 0x08)
+		temp = ip4 & 0x10;
+		if(temp == 0x10 && fire==0 && maintain==0)
 		{
-			P2= 0xFF;
-			ms_delay(1);
 			call_car = 0x01;
 		  call_lan = 0x00;
 			call = 0x01;
@@ -447,56 +472,76 @@ void main()                                           //output is accordingly ne
 			desti_change=0;
 			ready=1;
 			seco_spee=0;
-			/*while(temp == 0x20)
-			{
-				ip2 = en_ip_fun(0,1)
-				temp2 = ip2 & 0x03;
-				
-				ip4 = en_ip_fun(1,1);
-	    	temp = ip4 & 0x20;
-			}*/
+			fire=1;
+			P2=0xDE;
+			ms_delay(1);
 		}
 		
-	/*	ip4 = en_ip_fun(1,1);            //maintainance    maintainance    maintainance
+		ip4 = en_ip_fun(1,1);            //maintainance    maintainance    maintainance
 		temp = ip4 & 0x20;
 		if(temp == 0x20)
 		{
-			P2= 0xFF;
-			ms_delay(1);
-			call_car = 0x00;
-		  call_lan = 0x00;
-			call = 0x00;
-			car_desti = 0x00;
-			desti_change=1;
-			ready=1;
-			seco_spee=0;
-			while(temp == 0x20)
+		  maintain=1;
+		  desti_change=0;
+		  seco_spee=0;
+		  car_desti=0x00;
+		  call_car=0x00;
+		  call_lan=0x00;
+		  call=0x00;
+		  ip2 = en_ip_fun(0,1);
+		  temp = ip2 & 0x03;
+			en_op_fun(0,~temp);
+		  
+			ip4=en_ip_fun(1,1);
+		  temp2=ip4 & 0x43;
+			if(temp2 == 0x03)
 			{
-				ip2 = en_ip_fun(0,1)
-				temp2 = ip2 & 0x03;
-				
-				ip4 = en_ip_fun(1,1);
-	    	temp = ip4 & 0x20;
+		    if(temp == 0x01)
+		    {
+	        P2 = 0xDE;
+          ms_delay(1);  	
+ 	      }
+			  else if(temp == 0x02)
+			  {
+			    P2=0xFC;
+				  ms_delay(1);
+		    }
+		    else
+			  {
+			    P2=0xFF;
+				  ms_delay(1);
+		    }
+		  }
+			else
+			{
+				P2=0xFF;
+			  ms_delay(1);
 			}
-		}*/
+		}
+		else
+		{
+			maintain=0;
+			desti_change=1;
+		}
 	
 		temp = ip4 & 0x40;                        //stopstopstopstopstopstopstopstopstop
-		if(temp == 0x40)
+		if(temp == 0x40 && fire==0)
 		{
-			P2= 0xFF;
-			ms_delay(1);
-			call_car = 0x00;
-		  call_lan = 0x00;
-			call = 0x00;
-			car_desti = 0x00;
-			desti_change=1;
-			ready=1;
-			seco_spee=0;
+				P2= 0xFF;
+			  ms_delay(1);
+        call_car = 0x00;
+		    call_lan = 0x00;
+			  call = 0x00;
+			  car_desti = 0x00;
+			 // desti_change=1;
+		  	//ready=1;
+				seco_spee=0;
+			
 		}
 	
 	
 		temp = ip4 & 0x80;                       //777777777777777777777777777777777777777777777777777777
-		if(temp == 0x80)
+		if(temp == 0x80 && maintain==0)
 		{
 			if(seco_spee == 1)
 			{ 
@@ -510,16 +555,18 @@ void main()                                           //output is accordingly ne
 				
 				call=call_car | call_lan;
 				car_desti=0x00;
+								
 				ip4 = en_ip_fun(1,1);              //for lift man
 		    temp = ip4 & 0x04;
-			  if(temp == 0x00)                      
+			  if(temp == 0x00 && fire==0)                      
 		      desti_change=1;
+				
 				stand_or_not=1;
 			}
 			if(stand_or_not==1)
 			{
 				stand++;
-				if(stand==250)
+				if(stand==100)
 				{
 					stand=0;
 					ready=1;
@@ -533,23 +580,6 @@ void main()                                           //output is accordingly ne
 		
 		
 		//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		
-		/*ip4 = en_ip_fun(1,1);
-		temp = ip4 & 0x02;
-		if(temp != 0x02 && car_desti != 0x00)                        //like stop
-		{
-			like_stop++;
-			if(like_stop==200)                                     //count for like_stop
-			{
-				like_stop =0;
-				call_car = 0x00;
-				call_lan = 0x00;
-				call = 0x00;
-				car_desti = 0x00;
-			}
-		}
-		else
-			like_stop = 0;*/
 		
 		
 		if(car_desti == 0x00)                                      //for car_buzzer2
@@ -622,7 +652,7 @@ void main()                                           //output is accordingly ne
 		ip4 = en_ip_fun(1,1);                     //for seven_segment
 		temp = ip4 & 0x01;
 		temp2 = ip4 & 0x02;
-		if((temp != 0x01) | (temp2 !=0x02 & car_desti != 0x00))
+		if((temp != 0x01) | (temp2 !=0x02 & car_desti != 0x00) | maintain==1)
 		{
 			blink_seven++;
 			if(blink_seven == 10 || blink_seven == 20)
@@ -718,7 +748,7 @@ unsigned char op2_fun()
 	
 	else
 	{
-	  if(disp==0)
+		if(disp==0)
  	  {
 	    switch(car)
 	    {
@@ -752,8 +782,10 @@ unsigned char op2_fun()
 	  }
 	  else
   	{
-			if(cl==0)
-			  temp = 0xC7;
+			if(maintain==1)
+				temp=0xAA;
+			else if(cl==0)
+		    temp = 0xC7;
 			else
 				temp = 0xc6;
 	  }
