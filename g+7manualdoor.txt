@@ -366,11 +366,7 @@ void main()                                           //output is accordingly ne
 		      {
 			      P2=0xCE;
 				    ms_delay(1);
-			    }
-        else
-				{
-          
-				}					
+			    }				
 			}
 			else if(temp == 0x01 && temp != 0x02)
 			{
@@ -411,8 +407,6 @@ void main()                                           //output is accordingly ne
 				}
         if(ram_count==5)
 				{
-					/*P2 = P2 & 0xF7;         //to on buzzer
-					ms_delay(1);*/
 					call_car = 0x00;
 				  call_lan = 0x00;
 				  call = 0x00;
@@ -424,7 +418,7 @@ void main()                                           //output is accordingly ne
 			}	
       else
 			{
-				P2 = P2 | 0x63;
+				P2 = P2 | 0x62;
 				ms_delay(1);
         car_buzzer++;
 				if(car_buzzer == 100)
@@ -434,6 +428,28 @@ void main()                                           //output is accordingly ne
           ms_delay(1);					
 				}
 			}
+		}
+		
+		
+		ip4=en_ip_fun(1,1);                          //AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA
+		temp = ip4 & 0x04;
+		if(temp == 0x04)
+		{//dont use temp inside the function
+			if(AA==0)
+			{
+				AA=1;
+			  desti_change=0;
+			  
+			}
+			else
+			{
+				
+			}
+		}
+		if(temp != 0x04 && AA==1)
+		{
+			AA=0;
+			desti_change=1;
 		}
 		
 		
