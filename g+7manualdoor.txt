@@ -457,18 +457,21 @@ void main()                                           //output is accordingly ne
 		temp = ip4 & 0x10;
 		if(temp == 0x10)
 		{
-			P2= 0xFF;
-			ms_delay(1);
-			call_car = 0x01;
-		  call_lan = 0x00;
-			call = 0x01;
-			car_desti = 0x01;
-			desti_change=0;
-			ready=1;
-			fire=1;
-			P2=0xDE;
-			ms_delay(1);
+			if(fire==0)
+			{
+				P2= 0xFF;
+			  ms_delay(1);
+				desti_change=0;
+				call_car = 0x01;
+		    call_lan = 0x00;
+			  call = 0x01;
+			  car_desti = 0x01;
+				fire=1;
+				ready=1;
+			}
 		}
+		
+		
 		
 	/*	ip4 = en_ip_fun(1,1);            //maintainance    maintainance    maintainance
 		temp = ip4 & 0x20;
@@ -480,7 +483,7 @@ void main()                                           //output is accordingly ne
 		  call_lan = 0x00;
 			call = 0x00;
 			car_desti = 0x00;
-			desti_change=1;
+			//desti_change=1;
 			ready=1;
 			while(temp == 0x20)
 			{
@@ -501,7 +504,7 @@ void main()                                           //output is accordingly ne
 		  call_lan = 0x00;
 			call = 0x00;
 			car_desti = 0x00;
-			desti_change=1;
+			//desti_change=1;
 			ready=1;
 		}
 	
@@ -522,7 +525,7 @@ void main()                                           //output is accordingly ne
 				car_desti=0x00;
 				ip4 = en_ip_fun(1,1);              //for lift man
 		    temp = ip4 & 0x04;
-			  if(temp == 0x00)                      
+			  if(temp == 0x00 && fire==0)                      
 		      desti_change=1;
 				stand_or_not=1;
 			}
