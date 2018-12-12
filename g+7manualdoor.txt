@@ -1,2 +1,762 @@
+#include<reg52.h>                                     //header file
 
+sbit en_ip1=P1^4;                                    //all four variables are used to enable inputs buffers
+sbit en_ip2=P1^3;
+sbit en_ip3=P1^2;
+sbit en_ip4=P1^5;
 
+sbit en_op1=P3^0;                                    //all three variables are used to enable output buffers
+sbit en_op2=P3^1;
+
+sbit sw1=P3^4;                                       //three switches for floor settings
+sbit sw2=P3^5;
+sbit sw3=P3^6;
+
+sbit up=P2^1;
+sbit down=P2^5;
+
+unsigned char ip1;                                     //four variables for four inputs
+unsigned char ip2;
+unsigned char ip3;
+unsigned char ip4;
+
+unsigned char car;                                   //a variable showing position of cabin
+unsigned char call_car=0x00;                              //in call variable if any bit is one then that call is pendind
+unsigned char call_lan=0x00;
+unsigned char call=0x00;
+unsigned char car_desti=0x00;
+//unsigned char call_lan_pre=0x00;
+
+void en_op_fun(bit op,unsigned char temp);
+unsigned char en_ip_fun(bit ip1,bit ip2);
+unsigned char op2_fun();                              //three functions for different outputs
+
+void ms_delay(unsigned int time);                     //delay functions
+
+unsigned int fan,stand,like_stop,buzzer,car_buzzer,car_buzzer2,ram,buzzer_on_count;
+unsigned char i,temp,temp2,k,blink,memo,blink_seven,ram_count;
+bit door,start,desti_change,seco_spee,ready,fire,maintain,disp,ram_flip,cl,stand_or_not,buzzer_on;
+
+void main()                                           //output is accordingly negative logic
+{
+	en_ip1=1;                                          //(negative level trigger)initialisation of enables of input buffers
+	en_ip2=1;
+	en_ip3=1;
+	en_ip4=1;
+	
+	en_op1=0;                                          //(positive edge trigger)initialisation of enables of output buffers
+	en_op2=0;
+	                                          
+	en_op_fun(0,0xFF);                       //initialisation of output port-1
+  en_op_fun(1,0xFF);                      //initialisation of output port-2
+	P2=0xFF;                                //initialisation of output port-3 
+	ms_delay(1);                      
+	
+	fan = 0;                               //integers
+	stand =0;
+	like_stop=0;
+	buzzer=0;
+	ram=0;
+	car_buzzer=0;
+	car_buzzer2=0;
+	buzzer_on_count=0;
+	
+	blink=0;                              //chars
+	blink_seven=0;
+	ram_count=0;
+	
+	door=0;                              //to chack in the the starting that all doors are closed or not	
+	start=0;                             //to ckeck till when we need to drive the car till it ends to one of the the floor
+	desti_change=1;                      //desination can be changed
+	seco_spee = 0;                       //car is going at secong speed
+	ready = 1;                           //car is ready to take second call                      
+	//fire = 0;
+	//maintain = 0;
+	disp=0;
+	ram_flip=0;
+	cl=0;
+	stand_or_not=0;
+	buzzer_on=0;
+	
+	ip1=en_ip_fun(0,0);                  //For initialisation
+	ip4=en_ip_fun(1,1);
+	
+	temp = ip4 & 0x80;
+	if(temp != 0x80)
+	{
+		while(start!=1)
+		{
+      ip4 = en_ip_fun(1,1);
+			temp = ip4 & 0x01;
+			temp2 = ip4 & 0x02;
+			if(temp == 0x01 && temp2 == 0x02)
+			{
+				ram_count=0;
+				ram=0;
+				ram_flip=0;
+			  P2 = 0x8E;
+        ms_delay(1);				
+			}
+			else if(temp == 0x01 && temp != 0x02)
+			{
+				P2 = P2 | 0x72;
+				ms_delay(1);
+				if(ram_flip == 0)
+				{
+				  P2 = P2 & 0xFE;
+          ms_delay(1);					
+				}
+				else
+				{	
+				  P2 = P2 | 0x01; 
+				  ms_delay(1);
+				}
+				if(ram_count != 5)
+          ram++;
+        if(ram == 300)
+        {
+          ram = 0;
+					ram_count++;
+					ram_flip = ~ram_flip;
+				}
+        if(ram_count==5)
+				{
+					P2 = P2 & 0xF7;
+					ms_delay(1);
+				}					
+			}	
+      else
+			{
+				ram_count=0;
+				ram=0;
+				ram_flip=0;
+				P2 = P2 | 0x73;
+				ms_delay(1);
+        car_buzzer++;
+				if(car_buzzer == 300)
+				{
+					car_buzzer = 0;
+					P2 = P2 & 0xF7;
+          ms_delay(1);					
+				}
+			}
+      ip4 = en_ip_fun(1,1);
+      temp = ip4 & 0x80;
+      if(temp == 0x80)
+        start =1;
+	  }
+	}
+	P2 = 0xFF;
+	ms_delay(1);
+  ip1 = en_ip_fun(0,0);
+	car=ip1;
+	en_op_fun(1,op2_fun());
+	
+	while(1)
+	{
+		ip1=en_ip_fun(0,0);                       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		if(ip1 != 0x00)
+		{	
+		  car=ip1;
+			ip4 = en_ip_fun(1,1);
+			temp = ip4 & 0x80;
+			temp2 = ip4 & 0x03;
+			if(car == car_desti && seco_spee ==0 && temp != 0x80 && temp2 == 0x03)
+			{
+				P2= P2 & 0xBF;                    //give second speed
+				ms_delay(1);
+				desti_change=0;
+				seco_spee=1;
+			}
+		}
+		
+		ip2=en_ip_fun(0,1);                       //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		ip2= ip2 & (~car);
+		call_car= call_car | ip2;
+		
+		ip3=en_ip_fun(1,0);                       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		ip3 =ip3 & (~car);
+		call_lan= call_lan | ip3;
+		
+		call= call_car | call_lan;
+		
+		if(call != 0x00 && desti_change==1)    //***********************************************************************************************************************************************************************
+		{
+		  if(up==1 && down==1)                                //if car is stop******************************************************************************************************************************************
+		  {
+			  if(call_car != 0x00 && call_lan != 0x00)         //both car and lan call at a time
+			  {
+					if(car > call_car && car > call_lan)           //(3.2)car will go down because call_car is down and call_lan is down
+					{
+						temp = call_car | call_lan;
+						for(i=0;i<8;i++)
+						{
+							temp2 = temp & (0x80 >> i);
+							if(temp2 != 0x00)
+								break;
+						}
+						car_desti=temp2;
+					}
+					else                                          //car will go up bcoz atleast one call is upwards
+					{                                             
+						if(call_car > car)                          //(3.1,3.3)car will go to lowest call_car higher than car
+						{
+						  for(i=0;i<8;i++)
+						  {
+							  temp = car & (0x01 << i);
+							  if(temp != 0x00)
+								  break;
+						  }
+						  for(k=i+1 ; k<8 ; k++)
+						  {
+							  temp = call_car & (0x01 << k);
+							  if(temp != 0x00)
+								  break;
+						  }
+							car_desti = temp;
+					  }
+						else                                         //(3.4)car will go up to attend call_lan
+							{
+							  for(i=0;i<8;i++)
+							  {
+								  temp = call_lan & (0x80>>i);
+								  if(temp != 0x00)
+									  break;
+							  }
+							  car_desti = temp;
+						  }
+					  }
+			    }
+			    else if(call_lan != 0x00)                        //both lan call is at a time
+				  {
+					  if(call_lan > car)                              //(2.1,2.3)car will go up
+					{
+						for(i=0;i<8;i++)
+						{
+							temp = call_lan & (0x80 >> i);
+							if(temp != 0x00)
+								break;
+						}
+						car_desti = temp;
+					}
+					else                                            //(2.2)car will go down
+					{
+						for(i=0;i<8;i++)
+						{
+							temp = car & (0x80 >> i);
+							if(temp != 0x00)
+								break;
+						}
+						for(k=i+1 ; k<8;k++)
+						{
+							temp = call_lan & ( 0x80 >> k);
+							if(temp != 0x00)
+								break;
+						}
+						car_desti = temp;
+					}
+				}
+				else if(call_car != 0x00)                         //both call_car at a time
+				{
+					if(call_car < car)                               //(1.2)car will go down
+					{
+						for(i=0;i<8;i++)
+						{
+							temp = call_car & (0x80>>i);
+							if(temp != 0x00)
+								break;
+						}
+						car_desti = temp;
+					}
+					else                                             //(1.1,1.3)car will go up
+					{
+						for(i=0;i<8;i++)
+						{
+							temp = car & (0x01 << i);
+							if(temp != 0x00)
+								break;
+						}
+						for(k=i+1;k<8;k++)
+						{
+							temp = call_car & (0x01 << k);
+							if(temp != 0x00)
+								break;
+						}
+						car_desti=temp;
+					}
+				}
+		  }
+		  else if(up==0)                           //if car is going up****************************************************************************************************************************************************
+		  {
+				if(call_car != 0x00)                   //there ia at least one call_car
+				{
+					for(i=0;i<8;i++)
+					{
+						temp = car & (0x01 << i);
+						if(temp != 0x00)
+							break;
+					}
+					for(k=i+1;k<8;k++)
+					{
+						temp = call_car & (0x01 << k);
+						if(temp != 0x00)
+							break;
+					}
+					car_desti=temp;
+				}	
+        else                                   //there is no call_car only call_lan
+				{
+          for(i=0;i<8;i++)
+					{
+						temp = call_lan & (0x80>>i);
+						if(temp != 0x00)
+							break;
+					}
+					car_desti=temp;
+				}					
+		  }
+		  else if(down==0)                          //if car is going down****************************************************************************************************************************************************
+		  {
+				temp = call_car | call_lan;
+				for(i=0;i<8;i++)
+				{
+					temp2 = car & (0x80>>i);
+					if(temp2 != 0x00)
+						break;
+		    }
+				for(k=i+1;k<8;k++)
+				{
+					temp2 = temp & (0x80 >> k);
+					if(temp2 != 0x00)
+						break;
+				}
+				car_desti = temp2;
+			}
+		  else                                       //if critical condition
+		  {
+			  P2=0xFF;
+			  ms_delay(2);
+	    }
+			temp = car_desti & call;
+			if(temp == 0x00)
+			{
+				P2 = P2 & 0xBF;
+				ms_delay(1);
+				seco_spee = 1;
+			}
+		}
+	  
+		
+		
+		ip4=en_ip_fun(1,1);                      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		if(ready == 1 && car_desti != 0x00)          //01010101010101010101010101010101010101010101010101
+		{
+			ip4 = en_ip_fun(1,1);
+			temp = ip4 & 0x01;
+			temp2 = ip4 & 0x02;
+			if(temp == 0x01 && temp2 == 0x02)
+			{
+				P2 = P2 & 0xFE;
+			  ms_delay(10);
+				ram=0;
+				ram_flip=0;
+				ram_count=0;
+				if(car < car_desti)
+			    {
+			      P2=0xEC;
+			      ms_delay(1);
+		      }
+		    else if (car > car_desti)
+		      {
+			      P2=0xCE;
+				    ms_delay(1);
+			    }
+        else
+				{
+          
+				}					
+			}
+			else if(temp == 0x01 && temp != 0x02)
+			{
+				P2 = P2 | 0x72;
+				ms_delay(1);
+				if(ram_flip == 0)
+				{
+				  P2 = P2 & 0xFE;
+          ms_delay(1);					
+				}
+				else
+				{	
+				  P2 = P2 | 0x01; 
+				  ms_delay(1);
+				}
+				if(ram_count != 5)
+          ram++;
+        if(ram == 100)
+        {
+          ram = 0;
+					ram_count++;
+					ram_flip = ~ram_flip;
+				}
+				if(ram_count==3)
+				{
+					P2 = P2 & 0xF7;         //to on buzzer
+					ms_delay(1);
+				}
+        if(ram_count==5)
+				{
+					/*P2 = P2 & 0xF7;         //to on buzzer
+					ms_delay(1);*/
+					call_car = 0x00;
+				  call_lan = 0x00;
+				  call = 0x00;
+				  car_desti = 0x00;
+					P2 = P2 | 0x01;
+					ms_delay(1);
+					buzzer_on=1;
+				}					
+			}	
+      else
+			{
+				
+				P2 = P2 | 0x63;
+				ms_delay(1);
+				seco_spee=0;
+        car_buzzer++;
+				if(car_buzzer == 100)
+				{
+					car_buzzer = 0;
+					P2 = P2 & 0xF7;
+          ms_delay(1);					
+				}
+			}
+		}
+		
+		
+		ip4 = en_ip_fun(1,1);                //fire  fire  fire  fire  fire  fie  rfire
+		temp = ip4 & 0x08;
+		if(temp == 0x08)
+		{
+			P2= 0xFF;
+			ms_delay(1);
+			call_car = 0x01;
+		  call_lan = 0x00;
+			call = 0x01;
+			car_desti = 0x01;
+			desti_change=0;
+			ready=1;
+			seco_spee=0;
+			/*while(temp == 0x20)
+			{
+				ip2 = en_ip_fun(0,1)
+				temp2 = ip2 & 0x03;
+				
+				ip4 = en_ip_fun(1,1);
+	    	temp = ip4 & 0x20;
+			}*/
+		}
+		
+	/*	ip4 = en_ip_fun(1,1);            //maintainance    maintainance    maintainance
+		temp = ip4 & 0x20;
+		if(temp == 0x20)
+		{
+			P2= 0xFF;
+			ms_delay(1);
+			call_car = 0x00;
+		  call_lan = 0x00;
+			call = 0x00;
+			car_desti = 0x00;
+			desti_change=1;
+			ready=1;
+			seco_spee=0;
+			while(temp == 0x20)
+			{
+				ip2 = en_ip_fun(0,1)
+				temp2 = ip2 & 0x03;
+				
+				ip4 = en_ip_fun(1,1);
+	    	temp = ip4 & 0x20;
+			}
+		}*/
+	
+		temp = ip4 & 0x40;                        //stopstopstopstopstopstopstopstopstop
+		if(temp == 0x40)
+		{
+			P2= 0xFF;
+			ms_delay(1);
+			call_car = 0x00;
+		  call_lan = 0x00;
+			call = 0x00;
+			car_desti = 0x00;
+			desti_change=1;
+			ready=1;
+			seco_spee=0;
+		}
+	
+	
+		temp = ip4 & 0x80;                       //777777777777777777777777777777777777777777777777777777
+		if(temp == 0x80)
+		{
+			if(seco_spee == 1)
+			{ 
+        P2=0xEE;
+			  ms_delay(10);
+				P2 = P2 | 0x01;
+				seco_spee = 0;
+				
+				call_car = call_car & (~car);
+			  call_lan = call_lan & (~car);
+				
+				call=call_car | call_lan;
+				car_desti=0x00;
+				ip4 = en_ip_fun(1,1);              //for lift man
+		    temp = ip4 & 0x04;
+			  if(temp == 0x00)                      
+		      desti_change=1;
+				stand_or_not=1;
+			}
+			if(stand_or_not==1)
+			{
+				stand++;
+				if(stand==250)
+				{
+					stand=0;
+					ready=1;
+					stand_or_not=0;
+				}
+				else 
+					ready=0;
+			}
+			
+		}
+		
+		
+		//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		
+		/*ip4 = en_ip_fun(1,1);
+		temp = ip4 & 0x02;
+		if(temp != 0x02 && car_desti != 0x00)                        //like stop
+		{
+			like_stop++;
+			if(like_stop==200)                                     //count for like_stop
+			{
+				like_stop =0;
+				call_car = 0x00;
+				call_lan = 0x00;
+				call = 0x00;
+				car_desti = 0x00;
+			}
+		}
+		else
+			like_stop = 0;*/
+		
+		
+		if(car_desti == 0x00)                                      //for car_buzzer2
+		{
+			ram=0;
+			ram_flip=0;
+			ram_count=0;
+			ip4 = en_ip_fun(1,1);
+		  temp = ip4 & 0x01;
+		  if(temp != 0x01)
+		  {
+			  P2 = P2 | 0x73;
+			  ms_delay(1);
+        car_buzzer2++;
+			  if(car_buzzer2 == 100)
+			  {
+				  car_buzzer2 = 0;
+				  P2 = P2 & 0xF7;
+          ms_delay(1);					
+			  }
+		  }
+		  else
+		  {
+				if(buzzer_on==0)
+				{
+				  P2 = P2  | 0x08; 
+			    car_buzzer2 = 0;
+				}
+				else
+				{
+					buzzer_on_count++;
+					if(buzzer_on_count==200)
+					{
+						buzzer_on_count=0;
+						buzzer_on=0;
+					}
+				}
+		  }
+		}
+	
+		
+		
+		if(up==1 && down==1)                     //to off fan to save power
+		{
+			fan++;
+			if(fan==500)
+			{
+				fan=0;
+				P2 = P2 | 0x10;
+				ms_delay(1);
+			}
+		}
+		else
+			fan=0;
+		
+		blink++;                               //for bilnking of op1 of car_desti
+    if(blink == 10 || blink == 20)
+    {
+			if(blink == 10)
+		  en_op_fun(0,~call);                                                //change 
+			else
+			{
+				blink = 0;
+				temp = call & (~car_desti);
+				en_op_fun(0,~temp);
+				//en_op_fun(0,car_desti); 
+			} 			
+		}
+		
+		ip4 = en_ip_fun(1,1);                     //for seven_segment
+		temp = ip4 & 0x01;
+		temp2 = ip4 & 0x02;
+		if((temp != 0x01) | (temp2 !=0x02 & car_desti != 0x00))
+		{
+			blink_seven++;
+			if(blink_seven == 10 || blink_seven == 20)
+			{
+				if(blink_seven == 10)
+					disp=0;
+				else
+				{
+					blink_seven = 0;
+					disp = 1;
+					if(temp != 0x01)
+						cl = 1;
+					else
+						cl = 0;
+				}
+			}
+		}
+		else
+		{
+			disp=0;
+		}
+		en_op_fun(1,op2_fun());
+  }	
+}
+
+void ms_delay(unsigned int time)
+{
+	unsigned int i,j;
+	for(i=0;i<time;i++)
+	for(j=0;j<1275;j++);
+}
+
+unsigned char en_ip_fun(bit ip1,bit ip2)
+{
+	unsigned char temp;
+	if(ip1==0 & ip2==0)
+	{
+		en_ip1=0;
+		ms_delay(1);
+		temp=P0;
+		en_ip1=1;
+	}
+	if(ip1==0 & ip2==1)
+	{
+		en_ip2=0;
+		ms_delay(1);
+		temp=P0;
+		en_ip2=1;
+	}
+	if(ip1==1 & ip2==0)
+	{
+		en_ip3=0;
+		ms_delay(1);
+		temp=P0;
+		en_ip3=1;
+	}
+	if(ip1==1 & ip2==1)
+	{
+		en_ip4=0;
+		ms_delay(1);
+		temp=P0;
+		en_ip4=1;
+	}
+	return temp;
+}
+
+void en_op_fun(bit op,unsigned char temp)
+{
+	if(op==0)
+	{
+	  P0=temp;
+	  en_op1=1;
+	  ms_delay(1);
+	  en_op1=0;
+	}
+	else
+	{
+	  P0=temp;
+	  en_op2=1;
+	  ms_delay(1);
+	  en_op2=0;	
+	}
+}
+
+unsigned char op2_fun()
+{
+	unsigned char temp;	//in optput-2 negative logic has been used
+	
+	ip4 = en_ip_fun(1,1);     //for auto attendent
+	temp2= ip4 & 0x04;
+	if(temp2 == 0x04)
+		temp = 0xAA;
+	
+	else
+	{
+	  if(disp==0)
+ 	  {
+	    switch(car)
+	    {
+		    case 0x01:
+		      temp = 0xC0;
+		      break;
+		    case 0x02:
+		      temp = 0xF9;
+		      break;
+		    case 0x04:
+		      temp = 0xA4;
+		      break;
+		    case 0x08:
+		      temp = 0xB0;
+		      break;
+		    case 0x10:
+		      temp = 0x99;
+		      break;
+		    case 0x20:
+		      temp = 0x92;
+		      break;
+		    case 0x40:
+		      temp = 0x82;
+		      break;
+		    case 0x80:
+		      temp = 0xF8;
+		      break;
+		    default:
+			    temp = 0xFF;
+	    }
+	  }
+	  else
+  	{
+			if(cl==0)
+			  temp = 0xC7;
+			else
+				temp = 0xc6;
+	  }
+  }
+	return temp;	
+}
