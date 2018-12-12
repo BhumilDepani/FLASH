@@ -446,7 +446,7 @@ void main()                                           //output is accordingly ne
 				
 			}
 		}
-		if(temp != 0x04 && AA==1)
+		else if(temp != 0x04 && AA==1)
 		{
 			AA=0;
 			desti_change=1;
@@ -455,7 +455,7 @@ void main()                                           //output is accordingly ne
 		
 		ip4 = en_ip_fun(1,1);                //fire  fire  fire  fire  fire  fie  rfire
 		temp = ip4 & 0x10;
-		if(temp == 0x10)
+		if(temp == 0x10 && maintain==0)
 		{
 			if(fire==0)
 			{
@@ -473,27 +473,67 @@ void main()                                           //output is accordingly ne
 		
 		
 		
-	/*	ip4 = en_ip_fun(1,1);            //maintainance    maintainance    maintainance
+		ip4 = en_ip_fun(1,1);            //maintainance    maintainance    maintainance
 		temp = ip4 & 0x20;
 		if(temp == 0x20)
 		{
-			P2= 0xFF;
-			ms_delay(1);
-			call_car = 0x00;
-		  call_lan = 0x00;
-			call = 0x00;
-			car_desti = 0x00;
-			//desti_change=1;
-			ready=1;
-			while(temp == 0x20)
+			if(maintain==0)
 			{
-				ip2 = en_ip_fun(0,1)
-				temp2 = ip2 & 0x03;
-				
-				ip4 = en_ip_fun(1,1);
-	    	temp = ip4 & 0x20;
+				P2= 0xFF;
+				ms_delay(1);
+				desti_change=0;
+				maintain=1;
+				ready=0;
+				call_car = 0x00;
+		    call_lan = 0x00;
+			  call = 0x00;
+			  car_desti = 0x00;
 			}
-		}*/
+			else
+			{
+				call_car = 0x00;
+		    call_lan = 0x00;
+			  call = 0x00;
+			  car_desti = 0x00;
+				ip2 = en_ip_fun(0,1);
+		    temp = ip2 & 0x03;
+				en_op_fun(0,~temp);
+				
+				ip4=en_ip_fun(1,1);
+		    temp2=ip4 & 0x43;
+				
+				if(temp2 == 0x03)
+			  {
+		      if(temp == 0x01)
+		      {
+	          P2 = 0xDE;
+            ms_delay(1);  	
+ 	        }
+			    else if(temp == 0x02)
+			    {
+			      P2=0xFC;
+				    ms_delay(1);
+		      }
+					else
+					{
+						 P2=0xFF;
+				    ms_delay(1);
+					}
+			  }
+				else
+			  {
+			    P2=0xFF;
+				  ms_delay(1);
+		    }
+		  }
+		}
+		else if(temp != 0x20 && maintain==1)
+		{
+			maintain=0;
+			ready=1;
+			desti_change=1;
+		}
+		
 	
 		temp = ip4 & 0x40;                        //stopstopstopstopstopstopstopstopstop
 		if(temp == 0x40)
@@ -604,7 +644,7 @@ void main()                                           //output is accordingly ne
 			fan=0;
 		
 		blink++;                               //for bilnking of op1 of car_desti
-    if(blink == 10 || blink == 20)
+    if(blink == 10 || blink == 20 )
     {
 			if(blink == 10)
 		  en_op_fun(0,~call);                                                //change 
@@ -620,7 +660,7 @@ void main()                                           //output is accordingly ne
 		ip4 = en_ip_fun(1,1);                     //for seven_segment
 		temp = ip4 & 0x01;
 		temp2 = ip4 & 0x02;
-		if((temp != 0x01) | (temp2 !=0x02 & car_desti != 0x00))
+		if((temp != 0x01) || (temp2 !=0x02 & car_desti != 0x00) || maintain==1)
 		{
 			blink_seven++;
 			if(blink_seven == 10 || blink_seven == 20)
@@ -750,7 +790,9 @@ unsigned char op2_fun()
 	  }
 	  else
   	{
-			if(cl==0)
+			if(maintain==1)
+				temp=0xAA;
+			else if(cl==0)
 			  temp = 0xC7;
 			else
 				temp = 0xc6;
