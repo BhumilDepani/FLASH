@@ -43,7 +43,7 @@ void main()                                           //output is accordingly ne
 	en_ip2=1;
 	en_ip3=1;
 	en_ip4=1;
-	lollollol
+	
 	en_op1=0;                                          //(positive edge trigger)initialisation of enables of output buffers
 	en_op2=0;
 	                                          
