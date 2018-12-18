@@ -38,7 +38,7 @@ unsigned char op2_fun();                              //output function for seve
 void ms_delay(unsigned int time);                     //delay functions
 
 unsigned int fan,stand,car_buzzer,car_buzzer2,ram,rams,buzzer_on_count,critical,car_cancel;
-unsigned char i,temp,temp2,k,blink,blink_seven,ram_count,ram_counts,floor;
+unsigned char i,temp,temp2,k,blink,blink_seven,ram_count,ram_counts,floor,multi;
 bit start,desti_change,ready,stop,fire,maintain,AA,disp,ram_flip,ram_flips,cl,stand_or_not,buzzer_on,open,seco_speev;
 
 void main()                                           //output is accordingly negative logic
@@ -96,28 +96,52 @@ void main()                                           //output is accordingly ne
 	switch(temp2)
 	{
 	  case 0x60:
-			floor=0x03;
+		{
+			floor=0x83;
+			multi=0x02;
 			break;
+		}
 		case 0x50:
-			floor=0x07;
+		{
+			multi=0x04;
+			floor=0x87;
 			break;
+		}
 		case 0x40:
-			floor=0x0F;
+		{
+			multi=0x08;
+			floor=0x8F;
 			break;
+		}
 		case 0x30:
-			floor=0x1F;
+		{
+			multi=0x10;
+			floor=0x9F;
 			break;
+		}
 		case 0x20:
-			floor=0x3F;
+		{
+			multi=0x20;
+			floor=0xBF;
 			break;
+		}
 		case 0x10:
-			floor=0x7F;
-			break;
-		case 0x00:
+		{
+			multi=0x40;
 			floor=0xFF;
 			break;
+		}
+		case 0x00:
+		{
+			multi=0x80;
+			floor=0xFF;
+			break;
+		}
 		default:
+		{
 			floor=0x00;
+			multi=0;
+		}
 	}	
 	
 	//1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
@@ -277,6 +301,12 @@ void main()                                           //output is accordingly ne
 	ms_delay(1);
   ip1 = en_ip_fun(0,0);
 	ip1 = ip1 & floor;
+	temp = ip1 & 0x80;
+	if(temp != 0x00)
+	{
+		ip1 = ip1 | multi;
+		ip1 = ip1 & 0x7F;
+	}
 	car=ip1;
 	en_op_fun(1,op2_fun());
 	maintain=0;
@@ -289,6 +319,13 @@ void main()                                           //output is accordingly ne
 		//2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
 		ip1=en_ip_fun(0,0);
 		ip1 = ip1 & floor;
+		
+		temp = ip1 & 0x80;
+		if(temp != 0x00)
+		{
+			ip1 = ip1 | multi;
+			ip1 = ip1 & 0x7F;
+		}
 		if(ip1!=0x00 && ip1!=0x01 && ip1!=0x02 && ip1!=0x04 && ip1!=0x08 && ip1!=0x10 && ip1!=0x20 && ip1!=0x40 && ip1!=0x80 && fire==0 && maintain==0)
 		{
 			P2=0xFF;
@@ -662,10 +699,10 @@ void main()                                           //output is accordingly ne
 			pre_desti=0x00;
 		}*/
 		
-		
-		ip4 = en_ip_fun(1,1);                //fire  fire  fire  fire  fire  fie  rfire
+		//(fire fire fire fire fire fire fire fire fire fire)7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 
+		ip4 = en_ip_fun(1,1);                
 		temp = ip4 & 0x10;
-		if(temp == 0x10 && maintain==0)
+		if((temp == 0x10 && maintain==0) | fire==1)
 		{
 			if(fire==0)
 			{
@@ -679,6 +716,12 @@ void main()                                           //output is accordingly ne
 				fire=1;
 				ready=1;
 			}
+			desti_change=0;
+			call_car = 0x01;
+		  call_lan = 0x00;
+			call = 0x01;
+			car_desti = 0x01;
+			ready=1;
 		}
 		
 		
@@ -915,6 +958,7 @@ void main()                                           //output is accordingly ne
 		    call_lan = 0x00;
 			  call = 0x00;
 			  car_desti = 0x00;
+				fire=0;
 			}
 		}
 		else
