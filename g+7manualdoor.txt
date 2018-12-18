@@ -184,22 +184,31 @@ void main()                                           //output is accordingly ne
 				
 					if(temp == 0x01)
 		      {
-						cam=0;
-            ms_delay(40);
+						if(cam==1)
+						{
+						  cam=0;
+              ms_delay(40);
+						}
             P2 = 0xDE;
             ms_delay(1);							
  	        }
 			    else if(temp == 0x02)
 			    {
-			      cam=0;
-						ms_delay(40);
+						if(cam==1)
+						{
+			        cam=0;
+						  ms_delay(40);
+						}
 						P2=0xFC;
 						ms_delay(1);
 		      }
 					else
 					{
-						cam=1;
-						ms_delay(40);
+						if(cam==0)
+						{
+						  cam=1;
+						  ms_delay(40);
+						}
 					  P2=0xFF;
 			      ms_delay(1);
 					}
@@ -220,8 +229,11 @@ void main()                                           //output is accordingly ne
 				  ram_count=0;
 				  ram=0;
 				  ram_flip=0;
-			    cam=0;
-					ms_delay(40);
+					if(cam==1)
+					{	
+			      cam=0;
+					  ms_delay(40);
+					}
 			    P2 = 0x8E;
           ms_delay(1);				
 			  }
@@ -725,10 +737,10 @@ void main()                                           //output is accordingly ne
 		}
 		
 		
-		
-		ip4 = en_ip_fun(1,1);            //maintainance    maintainance    maintainance
+		//(maintain maintain maintain maintain maintain maintain maintain)8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8
+		ip4 = en_ip_fun(1,1);
 		temp = ip4 & 0x20;
-		if(temp == 0x20)
+		if(temp == 0x20 && fire==0)
 		{
 			if(maintain==0)
 			{
@@ -758,52 +770,36 @@ void main()                                           //output is accordingly ne
 				
 				if(temp2 == 0x03)
 			  {
-
-				/*	 if(temp == 0x01)
-		        {
-	            P2 = P2 & 0xFE;
-              ms_delay(40);
-              P2 = 0xDE;
-              ms_delay(1);							
- 	          }
-			      else if(temp == 0x02)
-			      {
-			        P2= P2 & 0xFE;
-				      ms_delay(40);
-							P2=0xFC;
-							ms_delay(1);
-		        }*/
-					
-					
 					if(k == 0x01)
 		        {
-	            //P2 = P2 & 0xFE;
-              ram=0;
-							ms_delay(40);
+              if(cam==1)
+							{
+								cam=0;
+							  ms_delay(40);
+							}
               P2 = 0xDE;
               ms_delay(1);							
  	          }
 			      else if(k == 0x02)
 			      {
-			        //P2= P2 & 0xFE;
-				      ram=0;
-							ms_delay(40);
+							if(cam==1)
+							{
+			          cam=0;
+							  ms_delay(40);
+							}
 							P2=0xFC;
 							ms_delay(1);
 		        }
-					
-					
-					
-					
-					
 					else
-					  {
-							P2 = P2 | 0xFE;
-							ms_delay(40);
-						  P2=0xFF;
-				      ms_delay(1);
-					  }
-	
+					{
+						if(cam==0)
+						{
+						  cam=1;
+						  ms_delay(40);
+						}
+					  P2=0xFF;
+			      ms_delay(1);
+					}
 			  }
 				else
 			  {
@@ -1214,19 +1210,21 @@ void main()                                           //output is accordingly ne
 				//en_op_fun(0,car_desti); 
 			} 			
 		}*/
-		
-		blink++;
-		if(blink <= 5)
+		if(maintain==0)
 		{
-			en_op_fun(0,~call);     
-		}
-		else if(blink <= 10)
-		{
-			temp = call & (~car_desti);
+		  blink++;
+		  if(blink <= 5)
+		  {
+			  en_op_fun(0,~call);     
+	 	  }
+		  else if(blink <= 10)
+		  {
+			  temp = call & (~car_desti);
 				en_op_fun(0,~temp);
-		}
-		else
-			blink=1;
+		  }
+		  else
+			  blink=1;
+	  }
 		
 		ip4 = en_ip_fun(1,1);                     //for seven_segment
 		temp = ip4 & 0x01;
