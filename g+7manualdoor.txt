@@ -12,9 +12,13 @@ sbit sw1=P3^4;                                       //three switches for floor 
 sbit sw2=P3^5;
 sbit sw3=P3^6;
 
+sbit cam=P2^0;
 sbit up=P2^1;
+sbit buzz=P2^3;
+sbit fans=P2^4;
 sbit down=P2^5;
 sbit seco_spee=P2^6;
+
 
 unsigned char ip1;                                     //four variables for four inputs
 unsigned char ip2;
@@ -36,7 +40,7 @@ void ms_delay(unsigned int time);                     //delay functions
 
 unsigned int fan,stand,car_buzzer,car_buzzer2,ram,rams,buzzer_on_count,critical;
 unsigned char i,temp,temp2,k,blink,blink_seven,ram_count,ram_counts,floor;
-bit start,desti_change,ready,stop,fire,maintain,AA,disp,ram_flip,ram_flips,cl,stand_or_not,buzzer_on,open;
+bit start,desti_change,ready,stop,fire,maintain,AA,disp,ram_flip,ram_flips,cl,stand_or_not,buzzer_on,open,seco_speev;
 
 void main()                                           //output is accordingly negative logic
 {
@@ -80,6 +84,7 @@ void main()                                           //output is accordingly ne
 	stand_or_not=0;
 	buzzer_on=0;
 	open=0;
+	seco_speev=0;
 	
 	if(sw1==0 && sw2==1 && sw3==1)
 			 floor=0x03;
@@ -129,6 +134,7 @@ void main()                                           //output is accordingly ne
 			{
 			  if(k==0x20)
 			  {
+					maintain=1;
 				  ip2 = en_ip_fun(0,1);
 		      
 					temp = ip2 & 0x03;
@@ -142,16 +148,25 @@ void main()                                           //output is accordingly ne
 			    {
 		        if(temp == 0x01)
 		        {
-	            P2 = 0xDE;
-              ms_delay(1);  	
+	            //P2 = P2 & 0xFE;
+							cam=0;
+              ms_delay(40);
+              P2 = 0xDE;
+              ms_delay(1);							
  	          }
 			      else if(temp == 0x02)
 			      {
-			        P2=0xFC;
-				      ms_delay(1);
+			        //P2= P2 & 0xFE;
+				      cam=0;
+							ms_delay(40);
+							P2=0xFC;
+							ms_delay(1);
 		        }
 					  else
 					  {
+							//P2 = P2 | 0xFE;
+							cam=1;
+							ms_delay(40);
 						  P2=0xFF;
 				      ms_delay(1);
 					  }
@@ -162,6 +177,12 @@ void main()                                           //output is accordingly ne
 				    ms_delay(1);
 		      }
 		    }
+				else if(maintain==1 && k!=0x20)
+				{
+					maintain=0;
+					ms_delay(1000);
+				}
+				
 			
 		/////////////////////////////////////////////////////////////////////////////////////////
 			  else if(temp == 0x01 && temp2 == 0x02)
@@ -169,8 +190,9 @@ void main()                                           //output is accordingly ne
 				  ram_count=0;
 				  ram=0;
 				  ram_flip=0;
-			    P2 = P2 & 0xFE;
-			    ms_delay(10);
+			   //P2 = P2 & 0xFE;
+			    cam=0;
+					ms_delay(40);
 			    P2 = 0x8E;
           ms_delay(1);				
 			  }
@@ -180,17 +202,19 @@ void main()                                           //output is accordingly ne
 				  ms_delay(1);
 				  if(ram_flip == 0)
 				  {
-				    P2 = P2 & 0xFE;
-            ms_delay(1);					
+				    //P2 = P2 & 0xFE;
+            cam=0;
+						ms_delay(1);					
 				  }
 				  else
 				  {	
-				    P2 = P2 | 0x01; 
+				    //P2 = P2 | 0x01; 
+						cam=1;
 				    ms_delay(1);
 				  }
 				  if(ram_count != 5)
             ram++;
-          if(ram == 100)
+          if(ram == 50)
           {
             ram = 0;
 					  ram_count++;
@@ -198,7 +222,8 @@ void main()                                           //output is accordingly ne
 				  }
           if(ram_count==5)
 			 	  {
-					  P2 = P2 & 0xF7;
+					  //P2 = P2 & 0xF7;
+						buzz=0;
 					  ms_delay(1);
 				  }					
 			  }	
@@ -213,7 +238,8 @@ void main()                                           //output is accordingly ne
 				  if(car_buzzer == 300)
 				  {
 					  car_buzzer = 0;
-					  P2 = P2 & 0xF7;
+					 // P2 = P2 & 0xF7;
+						buzz=0;
             ms_delay(1);					
 				  }
 			  }
@@ -243,6 +269,7 @@ void main()                                           //output is accordingly ne
 	ip1 = ip1 & floor;
 	car=ip1;
 	en_op_fun(1,op2_fun());
+	maintain=0;
 	
 	while(1)
 	{
@@ -256,7 +283,8 @@ void main()                                           //output is accordingly ne
 			temp2 = ip4 & 0x03;
 			if(car == car_desti && seco_spee ==1 && temp != 0x80 && temp2 == 0x03)
 			{
-				P2= P2 & 0xBF;                    //give second speed
+				//P2= P2 & 0xBF;                    //give second speed
+				seco_spee=0;
 				ms_delay(1);
 				desti_change=0;
 			}
@@ -440,7 +468,8 @@ void main()                                           //output is accordingly ne
 			temp = car_desti & call;
 			if(temp == 0x00)
 			{
-				P2 = P2 & 0xBF;
+				//P2 = P2 & 0xBF;
+				seco_spee=0;
 				ms_delay(1);
 			}
 		}
@@ -456,8 +485,9 @@ void main()                                           //output is accordingly ne
 			temp2 = ip4 & 0x02;
 			if(temp == 0x01 && temp2 == 0x02)
 			{
-				P2 = P2 & 0xFE;
-			  ms_delay(10);
+				//P2 = P2 & 0xFE;
+				cam=0;
+			  ms_delay(40);
 				ram=0;
 				ram_flip=0;
 				ram_count=0;
@@ -489,29 +519,31 @@ void main()                                           //output is accordingly ne
 			{
 				P2 = P2 | 0x62;
 				ms_delay(1);
-				ip4=en_ip_fun(1,1);
-				temp = ip4 & 0x80;
-				if(temp == 0x80)
-				{
+			//	ip4=en_ip_fun(1,1);
+			//	temp = ip4 & 0x80;
+				//if(temp == 0x80)
+				//{
 				  if(ram_flip == 0)
 				  {
-				    P2 = P2 & 0xFE;
-            ms_delay(1);					
+				    //P2 = P2 & 0xFE;
+            cam=0;
+						ms_delay(1);					
 				  }
 				  else
 				  {	
-				    P2 = P2 | 0x01; 
-				    ms_delay(1);
+				    //P2 = P2 | 0x01; 
+				    cam=0;
+						ms_delay(1);
 			  	}
-			  }
-				else
-				{
-				  P2 = P2 | 0x01;
-				  ms_delay(1);	
-				}
+			 // }
+		//		else
+			//	{
+				//  P2 = P2 | 0x01;
+			//	  ms_delay(1);	
+			//	}
 				if(ram_count != 5)
           ram++;
-        if(ram == 100)
+        if(ram == 50)
         {
           ram = 0;
 					ram_count++;
@@ -519,7 +551,8 @@ void main()                                           //output is accordingly ne
 				}
 				if(ram_count==3)
 				{
-					P2 = P2 & 0xF7;         //to on buzzer
+					//P2 = P2 & 0xF7;         //to on buzzer
+					buzz=0;
 					ms_delay(1);
 				}
         if(ram_count==5)
@@ -528,14 +561,15 @@ void main()                                           //output is accordingly ne
 				  call_lan = 0x00;
 				  call = 0x00;
 				  car_desti = 0x00;
-					P2 = P2 | 0x01;
+					//P2 = P2 | 0x01;
+					cam=1;
 					ms_delay(1);
 					buzzer_on=1;
 				}					
 			}	
       else
 			{
-				P2 = P2 | 0x62;
+				P2 = P2 | 0x63;
 				ms_delay(1);
 				ram=0;
 				ram_flip=0;                    //cahnge cahneg change change change
@@ -544,8 +578,9 @@ void main()                                           //output is accordingly ne
 				if(car_buzzer == 100)
 				{
 					car_buzzer = 0;
-					P2 = P2 & 0xF7;
-          ms_delay(1);					
+					//P2 = P2 & 0xF7;
+          buzz=0;
+					ms_delay(1);					
 				}
 			}
 		}
@@ -627,30 +662,61 @@ void main()                                           //output is accordingly ne
 			  call = 0x00;
 			  car_desti = 0x00;
 				ip2 = en_ip_fun(0,1);
-		    temp = ip2 & 0x03;
+		    k = ip2 & 0x03;
 				
-				en_op_fun(0,~temp);
+				en_op_fun(0,~k);
 				
 				ip4=en_ip_fun(1,1);
 		    temp2=ip4 & 0x43;
 				
 				if(temp2 == 0x03)
 			  {
-		      if(temp == 0x01)
-		      {
-	          P2 = 0xDE;
-            ms_delay(1);  	
- 	        }
-			    else if(temp == 0x02)
-			    {
-			      P2=0xFC;
-				    ms_delay(1);
-		      }
+
+				/*	 if(temp == 0x01)
+		        {
+	            P2 = P2 & 0xFE;
+              ms_delay(40);
+              P2 = 0xDE;
+              ms_delay(1);							
+ 	          }
+			      else if(temp == 0x02)
+			      {
+			        P2= P2 & 0xFE;
+				      ms_delay(40);
+							P2=0xFC;
+							ms_delay(1);
+		        }*/
+					
+					
+					if(k == 0x01)
+		        {
+	            //P2 = P2 & 0xFE;
+              ram=0;
+							ms_delay(40);
+              P2 = 0xDE;
+              ms_delay(1);							
+ 	          }
+			      else if(k == 0x02)
+			      {
+			        //P2= P2 & 0xFE;
+				      ram=0;
+							ms_delay(40);
+							P2=0xFC;
+							ms_delay(1);
+		        }
+					
+					
+					
+					
+					
 					else
-					{
-						 P2=0xFF;
-				    ms_delay(1);
-					}
+					  {
+							P2 = P2 | 0xFE;
+							ms_delay(40);
+						  P2=0xFF;
+				      ms_delay(1);
+					  }
+	
 			  }
 				else
 			  {
@@ -664,6 +730,7 @@ void main()                                           //output is accordingly ne
 			maintain=0;
 			ready=1;
 			desti_change=1;
+			ms_delay(1000);
 		}
 		
 	
@@ -731,9 +798,12 @@ void main()                                           //output is accordingly ne
 			if(seco_spee == 0)
 			{ 
         P2=0xEE;
-			  ms_delay(10);
-				P2 = P2 | 0x01;
+			  ms_delay(40);
+				//P2 = P2 | 0x01;
+				ram=1;
 				ms_delay(1);
+				
+			//	seco_speev=1;
 				
 				call_car = call_car & (~car);
 			  call_lan = call_lan & (~car);
@@ -744,8 +814,25 @@ void main()                                           //output is accordingly ne
 		    temp = ip4 & 0x04;
 			  if(temp == 0x00 && fire==0 && maintain==0)                      
 		      desti_change=1;
+				
 				stand_or_not=1;
 			}
+			/*if(stand_or_not==1)
+			{
+				stand++;
+				if(stand==100)
+				{
+					stand=0;
+					ready=1;
+					stand_or_not=0;
+				}
+				else 
+					ready=0;
+			}*/
+		}
+		
+		//if(seco_speev==1)
+	//	{
 			if(stand_or_not==1)
 			{
 				stand++;
@@ -758,7 +845,7 @@ void main()                                           //output is accordingly ne
 				else 
 					ready=0;
 			}
-		}
+		//}
 		
 		
 		//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -789,15 +876,15 @@ void main()                                           //output is accordingly ne
 		else
 			critical=0;
 		////////////////////////////////////////////////////////////////////////////////////////
-		if(car_desti==0x00)
+		if(car_desti==0x00 && maintain!=1)             //time pass time pass time pass 
 		{
 			ip4 = en_ip_fun(1,1);
 			temp=ip4 & 0x01;
 			temp2=ip4 & 0x02;
 			k=ip4 & 0x80;
 			
-			P2 = P2 | 0x62;
-			ms_delay(1);
+			//P2 = P2 | 0x62;
+			//ms_delay(1);
 			
 			if(temp!=0x01)
 			{
@@ -805,10 +892,13 @@ void main()                                           //output is accordingly ne
 				if(car_buzzer2 == 100)
 			  {
 				  car_buzzer2 = 0;
-				  P2 = P2 & 0xF7;
-          ms_delay(1);						
+				  //P2 = P2 & 0xF7;
+          buzz=0;
+					ms_delay(1);						
 			  }
-				
+				//P2 = P2 | 0x01;
+				cam=1;
+				ms_delay(1);
 				ram=0;
 				ram_flip=0;
 				ram_count=0;
@@ -817,24 +907,26 @@ void main()                                           //output is accordingly ne
 			
 			else if(temp2 != 0x02 && open==1)
 			{
-				if(k == 0x80)
-				{
+			//	if(k == 0x80)
+				//{
 				  if(ram_flip == 0)
 				  {
-				    P2 = P2 & 0xFE;
-            ms_delay(1);					
+				    //P2 = P2 & 0xFE;
+            cam=0;
+						ms_delay(1);					
 				  }
 				  else
 				  {	
-				    P2 = P2 | 0x01; 
-				    ms_delay(1);
+				    //P2 = P2 | 0x01; 
+				    cam=0;
+						ms_delay(1);
 			  	}
-			  }
-				else
-				{
-				  P2 = P2 | 0x01;
-				  ms_delay(1);	
-				}
+			  //}
+			//	else
+	//			{
+		//		  P2 = P2 | 0x01;
+			//	  ms_delay(1);	
+				//}
 				if(ram_count != 5)
           ram++;
         if(ram == 100)
@@ -845,7 +937,8 @@ void main()                                           //output is accordingly ne
 				}
 				if(ram_count==3)
 				{
-					P2 = P2 & 0xF7;         //to on buzzer
+					//P2 = P2 & 0xF7;         //to on buzzer
+					buzz=0;
 					ms_delay(1);
 				}
         if(ram_count==5)
@@ -855,7 +948,8 @@ void main()                                           //output is accordingly ne
 				  call_lan = 0x00;
 				  call = 0x00;
 				  car_desti = 0x00;
-					P2 = P2 | 0x01;
+					//P2 = P2 | 0x01;
+					cam=1;
 					ms_delay(1);
 					buzzer_on=1;
 				}	
@@ -1011,17 +1105,18 @@ void main()                                           //output is accordingly ne
 			if(fan==500)
 			{
 				fan=0;
-				P2 = P2 | 0x10;
+				//P2 = P2 | 0x10;
+				fans=1;
 				ms_delay(1);
 			}
 		}
 		else
 			fan=0;
 		
-		blink++;                               //for bilnking of op1 of car_desti
-    if(blink == 10 || blink == 20 )
+		/*blink++;                               //for bilnking of op1 of car_desti
+    if(blink == 5 || blink == 10 )
     {
-			if(blink == 10)
+			if(blink == 5)                 
 		  en_op_fun(0,~call);                                                //change 
 			else
 			{
@@ -1030,7 +1125,20 @@ void main()                                           //output is accordingly ne
 				en_op_fun(0,~temp);
 				//en_op_fun(0,car_desti); 
 			} 			
+		}*/
+		
+		blink++;
+		if(blink <= 5)
+		{
+			en_op_fun(0,~call);     
 		}
+		else if(blink <= 10)
+		{
+			temp = call & (~car_desti);
+				en_op_fun(0,~temp);
+		}
+		else
+			blink=1;
 		
 		ip4 = en_ip_fun(1,1);                     //for seven_segment
 		temp = ip4 & 0x01;
