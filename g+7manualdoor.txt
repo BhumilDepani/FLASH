@@ -594,43 +594,30 @@ void main()                                           //output is accordingly ne
 				ram_count=0;
 				car_cancel=0;
 				if(car < car_desti)            //during full speed
-			    {
-			      P2=0xEC;
-			      ms_delay(1);
-						uord=0;
-		      }
+			  {
+			    P2=0xEC;
+			    ms_delay(1);
+					uord=0;
+		    }
 		    else if (car > car_desti)
-		      {
-			      P2=0xCE;
-				    ms_delay(1);
-						uord=1;
-			    }
-					else if(car == car_desti)
+		    {
+			    P2=0xCE;
+				  ms_delay(1);
+					uord=1;
+			  }
+			  else if(car == car_desti)
+				{
+          if(uord==0)
 					{
-            if(uord==0)
-						{
-							P2=0xAC;
-							ms_delay(1);
-						}
-						else
-						{
-							P2=0x8E;
-							ms_delay(1);
-						}
-					}						
-      /*  if(seco_spee==0)                //during second speed
-				{/
-          if(pre_desti < car_desti)
-			    {
-			      P2=0xAC;
-			      ms_delay(1);
-		      }
-		    else if (pre_desti > car_desti)
-		      {
-			      P2=0x8E;
-				    ms_delay(1);
-			    }
-				}*/					
+						P2=0xAC;
+						ms_delay(1);
+					}
+					else
+					{
+						P2=0x8E;
+						ms_delay(1);
+					}
+				}										
 			}
 			
 			else if(temp == 0x01 && temp != 0x02)
@@ -865,7 +852,6 @@ void main()                                           //output is accordingly ne
 	    blink_seven=0;
 	    ram_count=0;
 	    ram_counts=0;
-	    start=0;
 	    desti_change=1;          
 	    ready = 1;                                     
 	    fire = 0;                
@@ -881,10 +867,11 @@ void main()                                           //output is accordingly ne
 		}
 		
 	
-		temp = ip4 & 0x40;                        //stopstopstopstopstopstopstopstopstop
+		//(stop stop stop stop stop stop stop stop stop)9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 
+		temp = ip4 & 0x40;                        
 		if(temp == 0x40)
 		{
-			if(stop==0)
+			if(stop==0)                       //give stop command in  any condition
 			{
 			  P2= 0xFF;
 			  ms_delay(1);
@@ -906,11 +893,35 @@ void main()                                           //output is accordingly ne
 			  car_desti = 0x00;
 			}
 		}
-		else if(temp!=0x40 && stop==1)
+		else if(temp!=0x40 && stop==1)   //ending of stop
 		{
 			stop=0;
+	    fan = 0;
+			stand =0;
+	    car_buzzer=0;
+	    car_buzzer2=0;
+	    ram=0;
+	    rams=0;
+	    buzzer_on_count=0;
+	    critical=0x00;
+	    car_cancel=0;
+	    blink=0;
+	    blink_seven=0;
+	    ram_count=0;
+	    ram_counts=0;                                                       
+	    disp=0;                  
+	    ram_flip=0;   
+	    ram_flips=0; 
+	    cl=0;        
+	    stand_or_not=0;
+	    open=0;        
+	    seco_speev=0;
 			if(fire==0 && maintain==0)
 			{
+				call_car=0x00;
+	      call_lan=0x00;
+	      call=0x00;
+	      car_desti=0x00;
 				ready=1;
 			  desti_change=1;
 			}
@@ -939,75 +950,55 @@ void main()                                           //output is accordingly ne
 		}
 	
 	
-		temp = ip4 & 0x80;                       //777777777777777777777777777777777777777777777777777777
+		 //(777777777777777777777777777777777777777777777777777777)10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 
+		temp = ip4 & 0x80;                      
 		if(temp == 0x80)
 		{
-			if(seco_spee == 0)
+			if(seco_spee == 0)                          //to check for second speed
 			{ 
         P2=0xEE;
 			  ms_delay(40);
-				//P2 = P2 | 0x01;
-				ram=1;
+				cam=1;
 				ms_delay(1);
-				
-			//	seco_speev=1;
-				
-				call_car = call_car & (~car);
+			
+				call_car = call_car & (~car);           //erase this car from
 			  call_lan = call_lan & (~car);
 				call=call_car | call_lan;
 				car_desti=0x00;
+				
 				ip4 = en_ip_fun(1,1);              //for lift man and fire
 		    temp = ip4 & 0x04;
 			  if(temp == 0x00 && fire==0 && maintain==0)                      
 		      desti_change=1;
 				
-				stand_or_not=1;
+				stand_or_not=1;        //for standing delay
 			}
-			/*if(stand_or_not==1)
-			{
-				stand++;
-				if(stand==100)
-				{
-					stand=0;
-					ready=1;
-					stand_or_not=0;
-				}
-				else 
-					ready=0;
-			}*/
 		}
-		
-		//if(seco_speev==1)
-	//	{
-			if(stand_or_not==1)
-			{
-				stand++;
-				if(stand==100)
-				{
-					stand=0;
-					ready=1;
-					stand_or_not=0;
-				}
-				else 
-					ready=0;
-			}
-		//}
-		
-		
-		//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		
-	  if(up==0 || down==0)                           //critical critical critical critical
+		if(stand_or_not==1)           //for standing delat
 		{
-			ip1=en_ip_fun(0,0);           //write double
+			stand++;
+			if(stand==100)
+			{
+				stand=0;
+				ready=1;
+				stand_or_not=0;
+			}
+			else 
+				ready=0;
+			}
+		
+		
+		
+		    //(critical critical critical critical)11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 111 11 11 11 11 11 11 11 11  
+		 if(up==0 || down==0)                       
+		{
+			ip1=en_ip_fun(0,0);           //write doubles
 			ip1 =ip1 & floor;
 			if(ip1==0x00)
-			{
 				critical++;
-			}
 			else
-			{
-				critical=0;
-			}
+			critical=0;
+			
 			if(critical==200)
 			{
 				critical=0;
@@ -1017,11 +1008,35 @@ void main()                                           //output is accordingly ne
 		    call_lan = 0x00;
 			  call = 0x00;
 			  car_desti = 0x00;
-				fire=0;                       //critical condition in fire
+				fire=0;
+	      fan = 0;
+			  stand =0;
+	      car_buzzer=0;
+	      car_buzzer2=0;
+	      ram=0;
+	      rams=0;
+	      buzzer_on_count=0;
+	      critical=0x00;
+	      car_cancel=0;
+	      blink=0;
+	      blink_seven=0;
+	      ram_count=0;
+	      ram_counts=0;
+	      desti_change=1;          
+	      ready = 1;                                     
+	      fire = 0;                
+	      maintain = 0;            
+	      disp=0;                  
+	      cl=0;        
+	      stand_or_not=0;
+	      open=0;        
+	      seco_speev=0;
 			}
 		}
 		else
+		{
 			critical=0;
+		}
 		////////////////////////////////////////////////////////////////////////////////////////
 		if(car_desti==0x00 && maintain!=1)             //time pass time pass time pass 
 		{
