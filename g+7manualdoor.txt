@@ -36,9 +36,9 @@ unsigned char en_ip_fun(bit ip1,bit ip2);          //input function
 unsigned char op2_fun();                              //output function for seven segment
 void ms_delay(unsigned int time);                     //delay functions
 
-unsigned int fan,stand,car_buzzer,car_buzzer2,ram,rams,buzzer_on_count,critical,car_cancel,buzz_count;
+unsigned int fan,stand,car_buzzer,car_buzzer2,ram,rams,critical,car_cancel,buzz_count;
 unsigned char i,temp,temp2,k,blink,blink_seven,ram_count,ram_counts,floor,multi,floor_nos;
-bit start,desti_change,ready,stop,fire,maintain,AA,disp,ram_flip,ram_flips,cl,stand_or_not,open,seco_speev,uord;
+bit start,desti_change,ready,stop,fire,maintain,disp,ram_flip,ram_flips,cl,stand_or_not,open,uord;
 
 void main()                                           //output is accordingly negative logic
 {
@@ -66,7 +66,6 @@ void main()                                           //output is accordingly ne
 	car_buzzer2=0;                       //for time pass car gate is open
 	ram=0;
 	rams=0;
-	buzzer_on_count=0;
 	critical=0x00;
 	car_cancel=0;
 	buzz_count=0;
@@ -81,14 +80,12 @@ void main()                                           //output is accordingly ne
 	ready = 1;                           //car is ready to take second call                      
 	fire = 0;                            //if fire button is once pressed it becomes 1
 	maintain = 0;                        //if maintainance bits of ip is high then it is high
-	AA=0;                               //if maintainance bits of ip is high then it is high
 	disp=0;                             //if bits is 0 then it display floor otherwise display othen thing
 	ram_flip=0;                         //if bits is 0 then cam is ON otherwise it is OFF 
 	ram_flips=0;                        //if bits is 0 then cam is ON otherwise it is OFF
 	cl=0;                               //if cl==1 then dispaly "C" otherwise "L"
 	stand_or_not=0;                     //for standing delay
 	open=0;                             //to dispaly landing door after closing car door
-	seco_speev=0;                       //for mis match of D OFF ip
 	                                    
 																			
 																			//floor_nos
@@ -374,7 +371,6 @@ void main()                                           //output is accordingly ne
 			rams=0;
 			ram_counts=0;
 			ram_flips=0;
-			buzzer_on_count=0;
 			critical=0;
 			car_cancel=0;
 			desti_change=1;
@@ -853,7 +849,6 @@ void main()                                           //output is accordingly ne
 	    car_buzzer2=0;
 	    ram=0;
 	    rams=0;
-	    buzzer_on_count=0;
 	    critical=0x00;
 	    car_cancel=0;
 	    blink=0;
@@ -870,7 +865,6 @@ void main()                                           //output is accordingly ne
 	    cl=0;        
 	    stand_or_not=0;
 	    open=0;        
-	    seco_speev=0;
 			ms_delay(1000);
 		}
 		
@@ -911,7 +905,6 @@ void main()                                           //output is accordingly ne
 	    car_buzzer2=0;
 	    ram=0;
 	    rams=0;
-	    buzzer_on_count=0;
 	    critical=0x00;
 	    car_cancel=0;
 	    blink=0;
@@ -924,7 +917,6 @@ void main()                                           //output is accordingly ne
 	    cl=0;        
 	    stand_or_not=0;
 	    open=0;        
-	    seco_speev=0;
 			if(fire==0 && maintain==0)
 			{
 				call_car=0x00;
@@ -1028,7 +1020,6 @@ void main()                                           //output is accordingly ne
 				cl=0;        
 	      stand_or_not=0;
 	      open=0;        
-	      seco_speev=0;
 	      fan = 0;
 				buzz_count=0;
 			  stand =0;
@@ -1036,7 +1027,6 @@ void main()                                           //output is accordingly ne
 	      car_buzzer2=0;
 	      ram=0;
 	      rams=0;
-	      buzzer_on_count=0;
 	      car_cancel=0;
 			}
 		}
