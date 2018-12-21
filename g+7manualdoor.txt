@@ -342,8 +342,7 @@ void main()                                           //output is accordingly ne
 	
 	while(1)
 	{
-		//2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
-		ip1=en_ip_fun(0,0);
+		ip1 = en_ip_fun(0,0);
 		ip1 = ip1 & floor;
 		if(multi != 0x80)
 		{
@@ -354,6 +353,16 @@ void main()                                           //output is accordingly ne
 			  ip1 = ip1 & 0x7F;
 		  }
 	  }
+		
+		ip2=en_ip_fun(0,1);                 
+		ip2 = ip2 & floor_nos;
+		
+		ip3=en_ip_fun(1,0);                   
+		ip3 = ip3 & floor_nos;
+		
+		ip4 = en_ip_fun(1,1);
+		
+		//2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
 		if(ip1!=0x00 && ip1!=0x01 && ip1!=0x02 && ip1!=0x04 && ip1!=0x08 && ip1!=0x10 && ip1!=0x20 && ip1!=0x40 && ip1!=0x80 && fire==0 && maintain==0)
 		{                                                  //to reed at a time
 			P2=0xFF;                                          //then  initialize all things
@@ -380,7 +389,6 @@ void main()                                           //output is accordingly ne
 		else if(ip1 != 0x00)
 		{	
 		  car=ip1;
-			ip4 = en_ip_fun(1,1);
 			temp = ip4 & 0x80;
 			temp2 = ip4 & 0x03;
 			if(car == car_desti && seco_spee ==1 && temp != 0x80 && temp2 == 0x03)   //if there is not second speed and if it is destination 
@@ -396,16 +404,14 @@ void main()                                           //output is accordingly ne
 				call = call_car | call_lan;
 			}
 		}
+		
 		//3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
-		ip2=en_ip_fun(0,1);                 
-		ip2 = ip2 & floor_nos;
-		ip2= ip2 & (~car);
-		call_car= call_car | ip2;
+		temp= ip2 & (~car);
+		call_car= call_car | temp;
+		
 		//4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4
-		ip3=en_ip_fun(1,0);                   
-		ip3 = ip3 & floor_nos;
-		ip3 =ip3 & (~car);
-		call_lan= call_lan | ip3;
+		temp =ip3 & (~car);
+		call_lan= call_lan | temp;
 		
 		call= call_car | call_lan;
 		//5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5
@@ -575,11 +581,8 @@ void main()                                           //output is accordingly ne
 		}
 	  
 		//(0101010101010101010101010101010101010101010101010101010101010101)6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 6
-		ip4=en_ip_fun(1,1); 
-		
 		if(ready == 1 && car_desti != 0x00)
 		{
-			ip4 = en_ip_fun(1,1);
 			temp = ip4 & 0x01;               //for car gate
 			temp2 = ip4 & 0x02;               //for landing gate
 			if(temp == 0x01 && temp2 == 0x02)  //if all gates are closed
@@ -712,8 +715,7 @@ void main()                                           //output is accordingly ne
 			pre_desti=0x00;
 		}*/
 		
-		//(fire fire fire fire fire fire fire fire fire fire)7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 
-		ip4 = en_ip_fun(1,1);                
+		//(fire fire fire fire fire fire fire fire fire fire)7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7                 
 		temp = ip4 & 0x10;
 		if(((temp == 0x10 && maintain==0) || fire==1) && stop==0)
 		{
@@ -738,30 +740,9 @@ void main()                                           //output is accordingly ne
 			  car_desti = 0x01;
 			  ready=1;
 			}
-			/*temp2 = ip1 & 0x01;
-			k = ip4 & 0x80;
-			if(temp2 == 0x01 && k== 0x80)
-			{
-				desti_change=0;
-			  call_car = 0x00;
-		    call_lan = 0x00;
-			  call = 0x00;
-			  car_desti = 0x00;
-			  ready=0;
-			}
-			else
-			{
-			  desti_change=0;
-			  call_car = 0x01;
-		    call_lan = 0x00;
-			  call = 0x01;
-			  car_desti = 0x01;
-			  ready=1;
-			}*/
 		}
 		
 		//(maintain maintain maintain maintain maintain maintain maintain)8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8
-		ip4 = en_ip_fun(1,1);
 		temp = ip4 & 0x20;
 		if(temp == 0x20 && fire==0)
 		{
@@ -783,12 +764,10 @@ void main()                                           //output is accordingly ne
 		    call_lan = 0x00;
 			  call = 0x00;
 			  car_desti = 0x00;
-				ip2 = en_ip_fun(0,1);
 		    k = ip2 & 0x03;
 				
 				en_op_fun(0,~k);
 				
-				ip4=en_ip_fun(1,1);
 		    temp2=ip4 & 0x43;
 				
 				if(temp2 == 0x03)                        //checking of all doors close
@@ -972,8 +951,7 @@ void main()                                           //output is accordingly ne
 					ready=0;
 				}
 				
-				ip4 = en_ip_fun(1,1);              //for lift man and fire
-		    temp = ip4 & 0x04;
+				temp = ip4 & 0x04;                      //for lift man and fire
 			  if(temp == 0x00 && fire==0 && maintain==0)                      
 		      desti_change=1;
 						
@@ -996,10 +974,8 @@ void main()                                           //output is accordingly ne
 			//(critical critical critical critical)11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 111 11 11 11 11 11 11 11 11  
 		 if((up==0 || down==0) && maintain==0)                       
 		{
-			ip1=en_ip_fun(0,0);           //this code is for that car is going up or down and not getting reed
-			ip1 =ip1 & floor;             //so this is critical situation so stop every things and restart it
-			if(ip1==0x00)
-				critical++;
+			if(ip1==0x00)                    //this code is for that car is going up or down and not getting reed
+				critical++;                        //so this is critical situation so stop every things and restart it
 			else
 			critical=0;
 			
@@ -1040,7 +1016,6 @@ void main()                                           //output is accordingly ne
 		//(time pass time pass time pass time pass time pass time pass)12 12 12 12 12 12 12 12 12 12 12 12 12 12 12 12 12 12 12 12 12 12
 		if(car_desti==0x00 && maintain==0 && stop==0)              
 		{
-			ip4 = en_ip_fun(1,1);
 			temp=ip4 & 0x01;                   //for car gate
 			temp2=ip4 & 0x02;                    //for landing gate
 			k=ip4 & 0x80;                         //for D OFF signel
@@ -1159,7 +1134,6 @@ void main()                                           //output is accordingly ne
      	{
 				if(blink == 5)
 				{
-					ip2=en_ip_fun(0,1);
 			    temp=ip2 & 0x03;
 				  en_op_fun(0,~temp);
 				}
@@ -1172,7 +1146,6 @@ void main()                                           //output is accordingly ne
 		}
 		
 		//(seven segment seven segment seven segment seven segment seven segment)16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 16 
-		ip4 = en_ip_fun(1,1);                     //for seven_segment
 		temp = ip4 & 0x01;
 		temp2 = ip4 & 0x02;
 		if((temp != 0x01) || (temp2 !=0x02 && car_desti != 0x00) ||  open==1 || maintain==1)
@@ -1262,7 +1235,7 @@ unsigned char op2_fun()
 {
 	unsigned char temp;	//in optput-2 negative logic has been used
 	
-	ip4 = en_ip_fun(1,1);     //for auto attendent
+	//ip4 = en_ip_fun(1,1);     //for maintainance
 	temp2= ip4 & 0x04;
 	if(temp2 == 0x04)
 		temp = 0xAA;
