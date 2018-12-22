@@ -11,6 +11,7 @@ sbit en_op2=P3^1;
 sbit sw1=P3^4;                                       //three switches for floor settings
 sbit sw2=P3^5;
 sbit sw3=P3^6;
+sbit sw4=P3^7;
 
 sbit cam=P2^0;                                    //to operate P2 as a single bit
 sbit up=P2^1;
@@ -38,7 +39,7 @@ void ms_delay(unsigned int time);                     //delay functions
 
 unsigned int fan,stand,car_buzzer,car_buzzer2,ram,rams,critical,buzz_count;
 unsigned char i,temp,temp2,k,blink,blink_seven,ram_count,ram_counts,floor,multi,floor_nosc,floor_nosl,reed,CC,LC,command;
-bit start,desti_change,ready,stop,fire,maintain,disp,ram_flip,ram_flips,cl,stand_or_not,open,uord,fire_end;
+bit start,desti_change,ready,stop,fire,maintain,disp,ram_flip,ram_flips,cl,stand_or_not,open,uord,fire_end,base;
 
 void main()                                           //output is accordingly negative logic
 {
@@ -92,6 +93,9 @@ void main()                                           //output is accordingly ne
 	fire_end=0;                           //to indicate fire is ended
 	
 	temp2 = P3 & 0x70;                  //to decide how many floors are there
+	temp = P3 & 0x80;
+	if(temp == 0x00)
+		base=1;
 	switch(temp2)
 	{
 	  case 0x60:
@@ -336,9 +340,9 @@ void main()                                           //output is accordingly ne
 	ms_delay(1);
   ip1 = en_ip_fun(0,0);           //to decide where is lift and disp it
 	ip1 = ip1 & floor;
-	temp = ip1 & 0x80;
 	if(multi != 0x80)
 	{
+	  temp = ip1 & 0x80;
 	  if(temp != 0x00)
 	  {
 		  ip1 = ip1 | multi;
@@ -737,21 +741,39 @@ void main()                                           //output is accordingly ne
 				P2= 0xFF;
 			  ms_delay(1);
 				desti_change=0;
-				call_car = 0x01;                //give command to go at ground
-		    call_lan = 0x00;
-			  call = 0x01;
-			  car_desti = 0x01;
+				if(base==0)
+				{
+				  call_car = 0x01;                //give command to go at ground
+		      call = 0x01;
+				  car_desti = 0x01;
+				}
+				else
+				{
+					call_car = 0x02;                //give command to go at ground
+		      call = 0x02;
+				  car_desti = 0x02;
+				}
+				call_lan = 0x00;
 				fire=1;
 				ready=1;
 			}
 			if(fire_end==0)
 			{
 				desti_change=0;
-			  call_car = 0x01;
-		    call_lan = 0x00;
-			  call = 0x01;
-			  car_desti = 0x01;
-			  ready=1;
+				if(base==0)
+				{
+			    call_car = 0x01;
+		      call = 0x01;
+			    car_desti = 0x01;
+				}
+				else
+				{
+					call_car = 0x02;
+		      call = 0x02;
+			    car_desti = 0x02;
+				}
+			  call_lan = 0x00;
+				ready=1;
 			}
 		}
 		
@@ -932,10 +954,19 @@ void main()                                           //output is accordingly ne
 				P2= 0xFF;
 			  ms_delay(1);
 				desti_change=0;
-				call_car = 0x01;
-		    call_lan = 0x00;
-			  call = 0x01;
-			  car_desti = 0x01;
+				if(base==0)
+				{
+				  call_car = 0x01;
+		      call = 0x01;
+			    car_desti = 0x01;
+				}
+				else
+				{
+					call_car = 0x02;
+		      call = 0x02;
+			    car_desti = 0x02;
+				}
+				call_lan = 0x00;
 				ready=1;
 			}
 		}
@@ -1117,7 +1148,7 @@ void main()                                           //output is accordingly ne
 		if(buzz==0)
 		{
 			buzz_count++;
-			if(buzz_count == 500 )           //delay_buzzer_off
+			if(buzz_count == 500)           //delay_buzzer_off
 			{
 				buzz_count=0;
 				buzz=1;
@@ -1256,35 +1287,70 @@ unsigned char op2_fun()
 	{
 	  if(disp==0)
  	  {
-	    switch(car)
-	    {
-		    case 0x01:
-		      temp = 0xC0;
-		      break;
-		    case 0x02:
-		      temp = 0xF9;
-		      break;
-		    case 0x04:
-		      temp = 0xA4;
-		      break;
-		    case 0x08:
-		      temp = 0xB0;
-		      break;
-		    case 0x10:
-		      temp = 0x99;
-		      break;
-		    case 0x20:
-		      temp = 0x92;
-		      break;
-		    case 0x40:
-		      temp = 0x82;
-		      break;
-		    case 0x80:
-		      temp = 0xF8;
-		      break;
-		    default:
-			    temp = 0xFF;
-	    }
+			if(base==0)
+			{
+	      switch(car)
+	      {
+		      case 0x01:
+		        temp = 0xC0;
+		        break;
+		      case 0x02:
+		        temp = 0xF9;
+		        break;
+		      case 0x04:
+		        temp = 0xA4;
+		        break;
+		      case 0x08:
+		        temp = 0xB0;
+		        break;
+		      case 0x10:
+		        temp = 0x99;
+		        break;
+		      case 0x20:
+		        temp = 0x92;
+		        break;
+		      case 0x40:
+		        temp = 0x82;
+		        break;
+		      case 0x80:
+		        temp = 0xF8;
+		        break;
+		      default:
+			      temp = 0xFF;
+	      }
+		  }
+			else
+			{
+				switch(car)
+	      {
+		      case 0x01:
+		        temp = 0x83;
+		        break;
+		      case 0x02:
+		        temp = 0xC0;
+		        break;
+		      case 0x04:
+		        temp = 0xF9;
+		        break;
+		      case 0x08:
+		        temp = 0xA4;
+		        break;
+		      case 0x10:
+		        temp = 0xB0;
+		        break;
+		      case 0x20:
+		        temp = 0x99;
+		        break;
+		      case 0x40:
+		        temp = 0x92;
+		        break;
+		      case 0x80:
+		        temp = 0x82;
+		        break;
+		      default:
+			      temp = 0xFF;
+	      }
+			}
 	  }
 	  else
   	{
