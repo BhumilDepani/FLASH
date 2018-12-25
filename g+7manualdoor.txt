@@ -1367,28 +1367,28 @@ void ms_delay(unsigned int time)
 unsigned char en_ip_fun(bit ip1,bit ip2)
 {
 	unsigned char temp;
-	if(ip1==0 & ip2==0)            //for first eight input  
+	if(ip1==0 && ip2==0)            //for first eight input  
 	{
 		en_ip1=0;
 		ms_delay(1);
 		temp=P0;
 		en_ip1=1;
 	}
-	if(ip1==0 & ip2==1)             //for second eight input
+	if(ip1==0 && ip2==1)             //for second eight input
 	{
 		en_ip2=0;
 		ms_delay(1);
 		temp=P0;
 		en_ip2=1;
 	}
-	if(ip1==1 & ip2==0)             //for third eight input
+	if(ip1==1 && ip2==0)             //for third eight input
 	{
 		en_ip3=0;
 		ms_delay(1);
 		temp=P0;
 		en_ip3=1;
 	}
-	if(ip1==1 & ip2==1)             //for four eight input
+	if(ip1==1 && ip2==1)             //for four eight input
 	{
 		en_ip4=0;
 		ms_delay(1);
