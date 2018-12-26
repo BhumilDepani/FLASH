@@ -396,7 +396,7 @@ void main()                                           //output is accordingly ne
 		//2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 
 		if(reed!=0x00 && reed!=0x01 && reed!=0x02 && reed!=0x04 && reed!=0x08 && reed!=0x10 && reed!=0x20 && reed!=0x40 && reed!=0x80 && fire==0 && maintain==0)
 		{                                                  //to reed at a time
-			P2=0xFF;                                          //then  initialize all things
+			P2=P2 | 0x7F;                                          //then  initialize all things
 			ms_delay(1);
 		  call_car = 0x00;
 		  call_lan = 0x00;
@@ -450,8 +450,11 @@ void main()                                           //output is accordingly ne
 		{
 			if(temp != 0x00)
 			{
-				ilb=0;                                    //to on buzzser
-				ms_delay(1);
+				if( stop==0 || fire==0 || maintain==0)
+				{
+				  ilb=0;                                    //to on buzzser
+				  ms_delay(1);
+				}
 				
 				blink++;
 				
@@ -475,10 +478,10 @@ void main()                                           //output is accordingly ne
 				
 				blink++;
 				
-				if(indi_off_count<15)
+				if(indi_off_count<25)
 				  indi_off_count++;
 				
-				if(indi_off_count < 15)
+				if(indi_off_count < 25)
 				{
 					if(blink <= 10)                             //to on car_desti LED
 			    en_op_fun(0,~indi_off);     
@@ -490,7 +493,7 @@ void main()                                           //output is accordingly ne
 		    else
 			    blink=1;
 				}
-				if(indi_off_count==15)
+				if(indi_off_count==25)
 				{
 					indi_off=0x00;
 					if(blink <= 10)                             //to on car_desti LED
@@ -663,7 +666,7 @@ void main()                                           //output is accordingly ne
 			}
 		  else                                       //if critical condition
 		  {
-			  P2=0xFF;
+			 P2=P2 | 0x7F;
 			  ms_delay(2);
 	    }
 			temp = car_desti & call;
@@ -1520,7 +1523,8 @@ void main()                                           //output is accordingly ne
 		}
 			
 	//(fan off fan off fan off fan off fan off fan off fan off fan off fan off)14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 14 
-		if(up==1 && down==1 && AA==0)                     
+		temp = ip4 & 0x01;
+		if(up==1 && down==1 && AA==0 && temp==0x01)                     
 		{
 			fan++;
 			if(fan==215)                                   //delay_fan
@@ -1534,7 +1538,7 @@ void main()                                           //output is accordingly ne
 			fan=0;
 		
 		//(buzzer off buzzer off buzzer off buzzer off)15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 15 
-		if(buzz==0)
+		if(buzz==0 && temp==0x01)
 		{
 			buzz_count++;
 			if(buzz_count == 500)           //delay_buzzer_off
