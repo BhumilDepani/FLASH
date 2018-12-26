@@ -8,9 +8,8 @@ sbit en_ip4=P1^5;
 sbit en_op1=P3^0;                                    //all three variables are used to enable output buffers
 sbit en_op2=P3^1;
 
-sbit sw1=P3^4;                                       //three switches for floor settings
-sbit sw2=P3^5;
-sbit sw3=P3^6;
+sbit restart=P3^3;                                  //for watchdog timer
+
 sbit sw4=P3^7;
 
 sbit cam=P2^0;                                    //to operate P2 as a single bit
@@ -93,10 +92,11 @@ void main()                                           //output is accordingly ne
 	stand_or_not=0;                     //for standing delay
 	open=0;                             //to dispaly landing door after closing car door
 	fire_end=0;                           //to indicate fire is ended
+	restart=1;
+	base=0;
 	
 	temp2 = P3 & 0x70;                  //to decide how many floors are there
-	temp = P3 & 0x80;
-	if(temp == 0x00)
+	if(sw4 == 0)
 		base=1;
 	switch(temp2)
 	{
@@ -248,7 +248,14 @@ void main()                                           //output is accordingly ne
 					ram_flip=0;
 					ram_count=0;
 					en_op_fun(0,0xFF);
-					ms_delay(1000);
+					ms_delay(400);
+					restart=0;
+					ms_delay(1);
+					restart=1;
+					ms_delay(400);
+					restart=0;
+					ms_delay(1);
+					ms_delay(200);
 				}
 	
 			  else if(temp == 0x01 && temp2 == 0x02)  //to go down in initialisation
@@ -261,14 +268,14 @@ void main()                                           //output is accordingly ne
 			      cam=0;
 					  ms_delay(40);
 					}
-			    P2 = 0x8E;
+			    P2 = 0xCE;
           ms_delay(1);
           uord=1;					
 			  }
 				
 			  else if(temp == 0x01 && temp != 0x02)
 			  {
-				  P2 = P2 | 0x72;               //to stop up and down command
+				  P2 = P2 | 0x32;               //to stop up and down command
 				  ms_delay(1);
 				  if(ram_flip == 0)             //cam on-off
 				  {
@@ -757,7 +764,7 @@ void main()                                           //output is accordingly ne
 		}
 	  
 		//(0101010101010101010101010101010101010101010101010101010101010101)7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7  
-		if(ready == 1 && car_desti != 0x00)
+		if(ready == 1 && car_desti != 0x00 && fire_end==0)
 		{
 			temp = command & 0x01;               //for car gate
 			temp2 = command & 0x02;               //for landing gate
@@ -968,7 +975,7 @@ void main()                                           //output is accordingly ne
 		
 		//(maintain maintain maintain maintain maintain maintain maintain)10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10   
 		temp = command & 0x20;
-		if(temp == 0x20 && fire==0)
+		if(temp == 0x20 && fire==0 && fire_end==0)
 		{
 			if(maintain==0)                               //initialisation of maintainance
 			{
@@ -1097,7 +1104,14 @@ void main()                                           //output is accordingly ne
 	    cl=0;        
 	    stand_or_not=0;
 	    open=0;        
-			ms_delay(1000);
+			ms_delay(400);
+			restart=0;
+			ms_delay(1);
+			restart=1;
+			ms_delay(400);
+			restart=0;
+			ms_delay(1);
+			ms_delay(200);
 		}
 		//(AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA AA)11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 
 		temp = command & 0x04;
@@ -1176,7 +1190,8 @@ void main()                                           //output is accordingly ne
 				desti_change=1;          
 	      ready = 1;                                     
 	      fire = 0;                          //if in fire we get critical situation then get fire OFF and desti_change=1
-	      disp=0; 
+	      fire_end=1;
+				disp=0; 
 	      ram_flip=0;
 				ram_flips=0;
 				cl=0;        
@@ -1333,7 +1348,7 @@ void main()                                           //output is accordingly ne
 		//(seven segment seven segment seven segment seven segment seven segment)17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 17 
 		temp = command & 0x01;
 		temp2 = command & 0x02;
-		if((temp != 0x01) || (temp2 !=0x02 && car_desti != 0x00) ||  open==1 || maintain==1)
+		if((temp != 0x01) || (temp2 !=0x02 && car_desti != 0x00) ||  open==1 || maintain==1 || fire==1)
 		{
 			blink_seven++;
 			if(blink_seven <=10)                       //to display floor number
@@ -1354,7 +1369,10 @@ void main()                                           //output is accordingly ne
 			disp=0;
 		}
 		en_op_fun(1,op2_fun());
-  }	
+    restart=0;
+		ms_delay(1);
+	  restart=1;
+	}	
 }
 
 void ms_delay(unsigned int time)
