@@ -837,6 +837,48 @@ void main()                                           //output is accordingly ne
 				}										
 			}
 			
+			//(777777777777777777777777777777777777777777777777777777)8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 
+		temp = command & 0x80;                      
+		if(temp == 0x80)
+		{
+			if(seco_spee == 0)                          //to check for second speed
+			{ 
+        P2=0xEE;
+			  ms_delay(40);
+				cam=1;
+				ms_delay(1);
+			
+				call_car = call_car & (~car);           //erase this car from
+			  call_lan = call_lan & (~car);
+				call=call_car | call_lan;
+				car_desti=0x00;
+				
+				if(fire == 1)
+				{
+					fire_end=1;
+					desti_change=0;
+					ready=0;
+				}
+				
+			  if(fire==0 && maintain==0)  //if fire=0 and maintainance=0 then and then desti_change=1                       
+		      desti_change=1;
+						
+				stand_or_not=1;        //for standing delay
+			}
+		}
+		if(stand_or_not==1)           //for standing delay
+		{
+			stand++;
+			if(stand==120)                               //delay_standing
+			{
+				stand=0;
+				ready=1;
+				stand_or_not=0;
+			}
+			else 
+				ready=0;
+			}
+			
 			else if(temp == 0x01 && temp != 0x02)
 			{
 				P2 = P2 | 0x62;
@@ -898,47 +940,7 @@ void main()                                           //output is accordingly ne
 			}
 		}
 		
-		 //(777777777777777777777777777777777777777777777777777777)8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 
-		temp = command & 0x80;                      
-		if(temp == 0x80)
-		{
-			if(seco_spee == 0)                          //to check for second speed
-			{ 
-        P2=0xEE;
-			  ms_delay(40);
-				cam=1;
-				ms_delay(1);
-			
-				call_car = call_car & (~car);           //erase this car from
-			  call_lan = call_lan & (~car);
-				call=call_car | call_lan;
-				car_desti=0x00;
-				
-				if(fire == 1)
-				{
-					fire_end=1;
-					desti_change=0;
-					ready=0;
-				}
-				
-			  if(fire==0 && maintain==0)  //if fire=0 and maintainance=0 then and then desti_change=1                       
-		      desti_change=1;
-						
-				stand_or_not=1;        //for standing delay
-			}
-		}
-		if(stand_or_not==1)           //for standing delay
-		{
-			stand++;
-			if(stand==120)                               //delay_standing
-			{
-				stand=0;
-				ready=1;
-				stand_or_not=0;
-			}
-			else 
-				ready=0;
-			}
+		 
 		
 			//(fire fire fire fire fire fire fire fire fire fire)9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9 9        
 		temp = command & 0x10;
@@ -946,14 +948,29 @@ void main()                                           //output is accordingly ne
 		{
 			if(fire==0)                        //initialise maintainance
 			{
-				P2= 0xFF;
-			  ms_delay(1);
+				/*P2= 0xFF;
+			  ms_delay(1);*/
 				desti_change=0;
 				if(base==0)
 				{
 				  call_car = 0x01;                //give command to go at ground
 		      call = 0x01;
 				  car_desti = 0x01;
+					
+					if(car==call)
+					{
+						uord=1;
+						temp=ip4 & 0x80;
+						if(temp == 0x80)
+						{
+							call_car = 0x00;
+							call=0x00;
+							car_desti=0x00;
+							fire_end=1;
+					    desti_change=0;
+				    	ready=0;
+						}		
+					}
 				}
 				else
 				{
